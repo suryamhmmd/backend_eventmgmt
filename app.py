@@ -65,12 +65,18 @@ def divisi():
             curl.close()
             return json_response(error=0,data=data)
         else:
-            return json_response(error=1,message='Method not supported')
+            nama = request.json['nama']
+            cur = mysql.connection.cursor()
+            cur.execute("INSERT INTO divisi (nama) VALUES (%s)", (
+                nama,
+            ))
+            mysql.connection.commit()
+            return json_response(error=0,data=nama)
     except Exception as e:
         return json_response(error=1,message=str(e))
 
 
-@app.route('/divisi/detail/<path:id>', methods=["GET","POST"])
+@app.route('/divisi/detail/<path:id>', methods=["GET","PUT","DELETE"])
 def detail_divisi(id):
     try:
         if request.method == 'GET':
@@ -80,13 +86,26 @@ def detail_divisi(id):
             data = curl.fetchone()
             curl.close()
             return json_response(error=0,data=data)
-        else:
-            return json_response(error=1,message='Method not supported')
+        elif request.method == "PUT":
+            nama = request.json['nama']
+            curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl.execute(
+                "UPDATE divisi SET nama=%s WHERE id=%s", (nama,id))
+            data = curl.fetchone()
+            curl.close()
+            return json_response(error=1,message='Data berhasil diubah')
+        elif request.method == "DELETE":
+            curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl.execute(
+                "DELETE FROM divisi WHERE id=%s", (id,))
+            data = curl.fetchone()
+            curl.close()
+            return json_response(error=0,message='Data berhasil dihapus')
     except Exception as e:
         return json_response(error=1,message=str(e))
 
 
-@app.route('/item', methods=["GET","POST"])
+@app.route('/item', methods=["GET","POST",])
 def item():
     try:
         if request.method == 'GET':
@@ -118,7 +137,7 @@ def item_divisi(divisi):
         return json_response(error=1,message=str(e))
 
 
-@app.route('/item/detail/<path:id>', methods=["GET","POST"])
+@app.route('/item/detail/<path:id>', methods=["GET","UPDATE", "DELETE"])
 def detail_item(id):
     try:
         if request.method == 'GET':
@@ -150,7 +169,7 @@ def event():
         return json_response(error=1,message=str(e))
 
 
-@app.route('/event/detail/<path:id>', methods=["GET","POST"])
+@app.route('/event/detail/<path:id>', methods=["GET","UPDATE", "DELETE"])
 def detail_event(id):
     try:
         if request.method == 'GET':

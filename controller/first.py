@@ -9,7 +9,7 @@ def cal_fitness(weight, value, population, threshold):
         S1 = np.sum(population[i] * value)
         S2 = np.sum(population[i] * weight)
         if float(S2) <= float(threshold):
-            fitness[i] = 1/1+S1
+            fitness[i] = 1/(1+S1)
         else :
             fitness[i] = 0 
     return fitness.astype(int)
