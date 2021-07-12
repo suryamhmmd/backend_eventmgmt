@@ -296,9 +296,22 @@ def generate(ide):
                     df_res = pd.DataFrame(res)
                     df_res = df_res.rename(columns = {0:'id', 1:'inout', 2:'item kategori', 3:'divisi', 4:'item', 5:'jumlah', 6:'satuan', 7:'harga', 8:'total_harga',9:'value'})
 
-                    item_number = df_res['id']
-                    weight = df_res['total_harga']
-                    value = df_res['value']
+                    arr_kat = df_res['item kategori'].unique()
+                    by_kat = []
+                    for l in range(len(arr_kat)):
+                        raw = []
+                        for m in range(len(res)):
+                            if arr_kat[l] == res[m][2]:
+                                raw.append(res[m])
+                        n = rd.randint(0,len(raw)-1)
+                        by_kat.append(raw[n])
+                
+                    df_kat = pd.DataFrame(by_kat)
+                    df_kat = df_kat.rename(columns = {0:'id', 1:'inout', 2:'item kategori', 3:'divisi', 4:'item', 5:'jumlah', 6:'satuan', 7:'harga', 8:'total_harga',9:'value'})
+                    
+                    item_number = df_kat['id']
+                    weight = df_kat['total_harga']
+                    value = df_kat['value']
                     knapsack_threshold = res_budget[i]['budget']
 
                     pop_size = (solutions_per_pop, len(df_res))
