@@ -259,7 +259,7 @@ def set_budget(ide):
 
 @app.route('/generate/<path:ide>', methods=["GET","POST"])
 def generate(ide):
-    try:
+    # try:
         if request.method == 'GET':
             curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
             curl.execute(
@@ -294,21 +294,7 @@ def generate(ide):
                         curl.close()
 
                     df_res = pd.DataFrame(res)
-                    df_res = df_res.rename(columns = {0:'id', 1:'inout', 2:'item_kategori', 3:'divisi', 4:'item', 5:'jumlah', 6:'satuan', 7:'harga', 8:'total_harga',9:'value'})
-                    
-                    arr_kat = df_res['item_kategori'].unique()
-                    by_kat = []
-                    for l in range(len(arr_kat)):
-                        raw = []
-                        for m in range(len(res)):
-                            if arr_kat[l] == res[m]['item_kategori']:
-                                raw.append(res[m])
-                        n = rd.randint(0,len(raw)-1)
-                        by_kat.append(raw[n])
-
-                    df_kat = pd.DataFrame(by_kat)
-                    df_kat = df_kat.rename(columns = {0:'id', 1:'inout', 2:'item_kategori', 3:'divisi', 4:'item', 5:'jumlah', 6:'satuan', 7:'harga', 8:'total_harga',9:'value'})
-    
+                    df_res = df_res.rename(columns = {0:'id', 1:'inout', 2:'item kategori', 3:'divisi', 4:'item', 5:'jumlah', 6:'satuan', 7:'harga', 8:'total_harga',9:'value'})
                     
                     item_number = df_res['id']
                     weight = df_res['total_harga']
@@ -322,7 +308,7 @@ def generate(ide):
                     parameters, fitness_history = optimize(weight, value, initial_population, pop_size, num_generations, knapsack_threshold)
 
                     selected_items = item_number * parameters[0]
-
+                    
                     arr_si = []
                     for j in range(len(selected_items)):
                         if int(1*selected_items[j]) > 0:
@@ -351,13 +337,13 @@ def generate(ide):
                     for j in range(len(item_fix[i])):
                         flat_item.append(item_fix[i][j])
                     
-                return json_response(error=0,data=flat_item,message='Success')
+                return json_response(error=0,data=item_fix,message='Success')
             else:
                 return json_response(error=1,message='Event not found')
         else:
             return json_response(error=1,message='Method not supported')
-    except Exception as e:
-        return json_response(error=1,message=str(e))
+    # except Exception as e:
+    #     return json_response(error=1,message=str(e))
 
 
 @app.route('/budget', methods=["GET","POST"])
