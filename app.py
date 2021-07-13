@@ -1,3 +1,4 @@
+import re
 from flask import Flask, flash, render_template, json, request, redirect, url_for, session, send_from_directory
 from flask_json import FlaskJSON, JsonError, json_response, as_json
 from flask_mysqldb import MySQL,MySQLdb
@@ -116,6 +117,64 @@ def item():
             curl.close()
             return json_response(error=0,data=data)
         else:
+            in_or_outdoor = request.json['in_or_outdoor']
+            item_kategori = request.json['item_kategori']
+            divisi = request.json['divisi']
+            item = request.json['item']
+            jumlah = request.json['jumlah']
+            satuan = request.json['satuan']
+            harga = request.json['harga']
+            value = request.json['value']
+            total_harga = jumlah * harga
+
+            cur = mysql.connection.cursor()
+            cur.execute("INSERT INTO item (in_or_outdoor,item_kategori,divisi,item,jumlah,satuan,harga,total_harga,value) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s)", (
+                in_or_outdoor,item_kategori,divisi,item,jumlah,satuan,harga,total_harga,value
+            ))
+            mysql.connection.commit()
+
+            return json_response(error=0,message="Sukses")
+    except Exception as e:
+        return json_response(error=1,message=str(e))
+
+
+@app.route('/item/detail/<path:id>', methods=["GET","PUT", "DELETE"])
+def detail_item(id):
+    try:
+        if request.method == 'GET':
+            curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl.execute(
+                "SELECT * FROM item WHERE id=%s", (id,))
+            data = curl.fetchone()
+            curl.close()
+            return json_response(error=0,data=data)
+        elif request.method == 'PUT':
+            in_or_outdoor = request.json['in_or_outdoor']
+            item_kategori = request.json['item_kategori']
+            divisi = request.json['divisi']
+            item = request.json['item']
+            jumlah = request.json['jumlah']
+            satuan = request.json['satuan']
+            harga = request.json['harga']
+            value = request.json['value']
+            total_harga = jumlah * harga
+
+            curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl.execute(
+                "UPDATE item SET in_or_outdoor=%s,item_kategori=%s,divisi=%s,item=%s,satuan=%s,value=%s,total_harga=%s WHERE id=%s", (
+                    in_or_outdoor,item_kategori,divisi,item,satuan,value,total_harga,id
+                ))
+            data = curl.fetchone()
+            curl.close()
+            return json_response(error=1,message='Data berhasil diubah')
+        elif request.method == 'DELETE':
+            curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl.execute(
+                "DELETE FROM item WHERE id=%s", (id,))
+            data = curl.fetchone()
+            curl.close()
+            return json_response(error=0,message='Data berhasil dihapus')
+        else:
             return json_response(error=1,message='Method not supported')
     except Exception as e:
         return json_response(error=1,message=str(e))
@@ -137,22 +196,6 @@ def item_divisi(divisi):
         return json_response(error=1,message=str(e))
 
 
-@app.route('/item/detail/<path:id>', methods=["GET","UPDATE", "DELETE"])
-def detail_item(id):
-    try:
-        if request.method == 'GET':
-            curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            curl.execute(
-                "SELECT * FROM item WHERE id=%s", (id,))
-            data = curl.fetchone()
-            curl.close()
-            return json_response(error=0,data=data)
-        else:
-            return json_response(error=1,message='Method not supported')
-    except Exception as e:
-        return json_response(error=1,message=str(e))
-
-
 @app.route('/event', methods=["GET","POST"])
 def event():
     try:
@@ -163,32 +206,7 @@ def event():
             data = curl.fetchall()
             curl.close()
             return json_response(error=0,data=data)
-        else:
-            return json_response(error=1,message='Method not supported')
-    except Exception as e:
-        return json_response(error=1,message=str(e))
-
-
-@app.route('/event/detail/<path:id>', methods=["GET","UPDATE", "DELETE"])
-def detail_event(id):
-    try:
-        if request.method == 'GET':
-            curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
-            curl.execute(
-                "SELECT * FROM event WHERE id=%s", (id,))
-            data = curl.fetchone()
-            curl.close()
-            return json_response(error=0,data=data)
-        else:
-            return json_response(error=1,message='Method not supported')
-    except Exception as e:
-        return json_response(error=1,message=str(e))
-
-
-@app.route('/event/create', methods=["GET","POST"])
-def create_event():
-    try:
-        if request.method == 'POST':
+        elif request.method == 'POST':
             idu = request.json['idu']
             nama = request.json['nama']
             penyelenggara = request.json['penyelenggara']
@@ -208,6 +226,73 @@ def create_event():
                 return json_response(error=0,message='Success. Event has been created')
             else:
                 return json_response(error=1,message='Data must be fullfilled')
+        else:
+            return json_response(error=1,message='Method not supported')
+    except Exception as e:
+        return json_response(error=1,message=str(e))
+
+
+@app.route('/event/detail/<path:id>', methods=["GET","PUT", "DELETE"])
+def detail_event(id):
+    try:
+        if request.method == 'GET':
+            curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl.execute(
+                "SELECT * FROM event WHERE id=%s", (id,))
+            data = curl.fetchone()
+            curl.close()
+            return json_response(error=0,data=data)
+        elif request.method == 'PUT':
+            nama = request.json['nama']
+            penyelenggara = request.json['penyelenggara']
+            tgl_mulai = request.json['tgl_mulai']
+            tgl_selesai = request.json['tgl_selesai']
+            tempat = request.json['tempat']
+            inorout = request.json['inorout']
+            target = request.json['target'] 
+            budget = request.json['budget']
+
+            curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl.execute(
+                "UPDATE event SET nama=%s,penyelenggara=%s,tgl_mulai=%s,tgl_selesai=%s,tempat=%s,inorout=%s,target=%s,budget=%s WHERE id=%s", (
+                    nama,penyelenggara,tgl_mulai,tgl_selesai,tempat,inorout,target,budget,id
+                ))
+            data = curl.fetchone()
+            curl.close()
+
+            curl2 = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl2.execute(
+                "DELETE FROM budget WHERE ide=%s", (id,))
+            data2 = curl2.fetchone()
+            curl2.close()
+
+            curl3 = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl3.execute(
+                "DELETE FROM rab WHERE ide=%s", (id,))
+            data3 = curl3.fetchone()
+            curl3.close()
+
+            return json_response(error=1,message='Data berhasil diubah')
+        elif request.method == 'DELETE':
+            curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl.execute(
+                "DELETE FROM event WHERE id=%s", (id,))
+            data = curl.fetchone()
+            curl.close()
+
+            curl2 = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl2.execute(
+                "DELETE FROM budget WHERE ide=%s", (id,))
+            data2 = curl2.fetchone()
+            curl2.close()
+
+            curl3 = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl3.execute(
+                "DELETE FROM rab WHERE ide=%s", (id,))
+            data3 = curl3.fetchone()
+            curl3.close()
+
+            return json_response(error=0,message='Data berhasil dihapus')
         else:
             return json_response(error=1,message='Method not supported')
     except Exception as e:
@@ -310,12 +395,12 @@ def generate(ide):
                     df_kat = df_kat.rename(columns = {0:'id', 1:'inout', 2:'item_kategori', 3:'divisi', 4:'item', 5:'jumlah', 6:'satuan', 7:'harga', 8:'total_harga',9:'value'})
     
                     
-                    item_number = df_res['id']
-                    weight = df_res['total_harga']
-                    value = df_res['value']
+                    item_number = df_kat['id']
+                    weight = df_kat['total_harga']
+                    value = df_kat['value']
                     knapsack_threshold = res_budget[i]['budget']
 
-                    pop_size = (solutions_per_pop, len(df_res))
+                    pop_size = (solutions_per_pop, len(df_kat))
                     initial_population = np.random.randint(2, size = pop_size)
                     initial_population = initial_population.astype(int)
 
@@ -331,27 +416,39 @@ def generate(ide):
                     res_si.append(arr_si)
 
                 item_fix = []
+                harga = []
                 for i in range(len(res_si)):
                     susun_ulang_kategori = []
                     susun_ulang_item = []
+                    harga_item = []
                     for j in range(len(res_si[i])):
                         curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
                         curl.execute(
                             "SELECT * FROM item WHERE id="+str(res_si[i][j])+"")
                         res_divisi = curl.fetchall()
                         curl.close()
-                        if res_divisi[0]['item_kategori'] not in susun_ulang_kategori:
-                            susun_ulang_kategori.append(res_divisi[0]['item_kategori'])
-                            item = [res_divisi[0]['id'],res_divisi[0]['divisi'],res_divisi[0]['item'],res_divisi[0]['total_harga']]
-                            susun_ulang_item.append(item)
+                        
+                        susun_ulang_kategori.append(res_divisi[0]['item_kategori'])
+                        item = [res_divisi[0]['id'],res_divisi[0]['divisi'],res_divisi[0]['item'],res_divisi[0]['total_harga']]
+                        susun_ulang_item.append(item)
+                        harga_item.append(res_divisi[0]['total_harga'])
                     item_fix.append(susun_ulang_item)
+                    harga.append(sum(harga_item))
                 
                 flat_item = []
                 for i in range(len(item_fix)):
                     for j in range(len(item_fix[i])):
                         flat_item.append(item_fix[i][j])
+
+                for i in range(len(flat_item)):
+                    idi=flat_item[i][0]
+                    cur = mysql.connection.cursor()
+                    cur.execute("INSERT INTO rab (idi,ide) VALUES (%s,%s)", (
+                        idi,ide
+                    ))
+                    mysql.connection.commit()
                     
-                return json_response(error=0,data=flat_item,message='Success')
+                return json_response(error=0,data=flat_item,harga=harga,message='Success')
             else:
                 return json_response(error=1,message='Event not found')
         else:
@@ -392,12 +489,21 @@ def budget_event(ide):
         return json_response(error=1,message=str(e))
 
 
-
-#Seting budget per divisi
-#Create model
-#DropItem
-#SaveToRAB
-
+@app.route('/rab/<path:ide>', methods=["GET","DELETE"])
+def rab(ide):
+    try:
+        if request.method == 'GET':
+            curl = mysql.connection.cursor(MySQLdb.cursors.DictCursor)
+            curl.execute(
+                "SELECT * FROM rab JOIN item ON rab.idi=item.id WHERE ide=%s", (ide,))
+            data = curl.fetchall()
+            curl.close()
+            return json_response(error=0,message='Sukses',data=data)
+        else:
+            return json_response(error=1,message='Method not supported')
+    except Exception as e:
+        return json_response(error=1,message=str(e))
+        
 
 @app.route('/budget/create/<path:ide>', methods=["GET","POST"])
 def create_budget_event(ide):
